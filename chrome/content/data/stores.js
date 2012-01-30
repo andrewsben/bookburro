@@ -55,24 +55,27 @@ var stores = [
     title: 'Shelfari',
     link: 'http://www.shelfari.com/booksearch.aspx?Adv=True&SearchAmazon=False&Title=&Author=&Isbn=#{ISBN}',
     process: function(req, isbn) {
-      if (req.responseText.match('We found 1 book matching')) {
+      if (!req.responseText.match('Your search did not return any results')) {
         return 'expore';
       }
-      return '';
+      return 'No Results';
     }
   },
   {
     name: 'abebooks',
     title: 'Abebooks',
-    link: 'http://www.abebooks.com/servlet/SearchResults?isbn=#{ISBN}',
-    affiliate_link: 'http://clickserve.cc-dt.com/link/tplclick?lid=41000000024660875&pubid=21000000000131337&isbn=#{ISBN}',
-    query: "http://search.abebooks.com/?isbn=#{ISBN}&ordr=2",
-    match: /PRIC\|(.*)/
+    link: 'http://www.abebooks.com/servlet/SearchResults?sortby=2&isbn=#{ISBN}',
+    affiliate_link: "http://www.abebooks.com/servlet/SearchResults?sortby=2&isbn=#{ISBN}&cm_ite=k514679",
+    query: "http://www.abebooks.com/servlet/SearchResults?sortby=2&isbn=#{ISBN}",
+    process: function(req) {
+	return "$" + req.responseText.match(/span class="price">\D*(\d*\.\d*)/)[1];
+    }
   },
   {
     name: 'alibris',
     title: 'Alibris',
-    affiliate_link: "http://click.linksynergy.com/fs-bin/click?id=qz*/NhQgUlY&offerid=99238.122856000&type=2&tmpid=939&RD_PARM1=http%253A%252F%252Fwww.alibris.com/booksearch%253Fqsort%253Dp%2526qisbn%253D#{ISBN_UPCASE}",
+//pending
+//    affiliate_link: "http://click.linksynergy.com/fs-bin/click?id=KgXurF9W7K4&offerid=99238.122856000&type=2&tmpid=939&RD_PARM1=http%253A%252F%252Fwww.alibris.com/booksearch%253Fqsort%253Dp%2526qisbn%253D#{ISBN_UPCASE}",
     link: 'http://www.alibris.com/booksearch?qsort=p&qisbn=#{ISBN_UPCASE}',
     query: 'http://partnersearch.alibris.com/cgi-bin/search?site=23615740&qisbn=#{ISBN_UPCASE}',
     process: function(req) {
@@ -127,7 +130,7 @@ var stores = [
 {
     name: 'amazon',
     title: 'Amazon',
-    affiliate_link: "http://www.amazon.com/exec/obidos/ASIN/#{ISBN_UPCASE}/bookburro-20",
+    affiliate_link: "http://www.amazon.com/exec/obidos/ASIN/#{ISBN_UPCASE}/andrewsbencom-20",
     link: 'http://www.amazon.com/exec/obidos/ASIN/#{ISBN_UPCASE}',
     query: "http://bookburro.appspot.com/?isbn=#{ISBN_UPCASE}",
     process: function(req) {
@@ -143,7 +146,7 @@ var stores = [
   {
     name: 'amazon_marketplace',
     title: 'Amazon Marketplace',
-    affiliate_link: "http://www.amazon.com/exec/obidos/redirect?tag=bookburro-20&path=tg/stores/offering/list/-/#{ISBN_UPCASE}/all/",
+    affiliate_link: "http://www.amazon.com/exec/obidos/redirect?tag=andrewsbencom-20&path=tg/stores/offering/list/-/#{ISBN_UPCASE}/all/",
     link: "http://www.amazon.com/gp/offer-listing/#{ISBN_UPCASE}/",
     query: "http://bookburro.appspot.com/?isbn=#{ISBN_UPCASE}",
     process: function(req) {
@@ -170,6 +173,7 @@ var stores = [
     name: 'booksamillion',
     title: 'Books A Million',
     link: "http://www.booksamillion.com/ncom/books?isbn=#{ISBN}",
+//pending
     process: function(req) {
       if (req.responseText.match(/Not Available/)) return '';
       var price = req.responseText.match(/Club Price: ([^<]*)</);
@@ -178,47 +182,43 @@ var stores = [
       }
     }
   },
-//   {
-//     name: 'barnesnoble',
-//     title: 'Barnes & Noble',
-//     link: 'http://search.barnesandnoble.com/booksearch/isbninquiry.asp?isbn=#{ISBN}',
-//     affiliate_link: 'http://search.barnesandnoble.com/booksearch/isbninquiry.asp?isbn=#{ISBN}&afsrc=1&lkid=J27115602&pubid=K131337&byo=1',
-//     query: 'http://search.barnesandnoble.com/booksearch/isbninquiry.asp?isbn=#{ISBN}',
-//     process: function(req) {
-//       // </li><li><strong>$34.99</strong> Online price
-//       try {
-//         return req.responseText.match(/<strong>(\$[0-9.]*)<\/strong> Online price/)[1];
-//       } catch (e) {}
-//     }
-//   },
   {
-    name: 'barnesnoble_member',
-    title: 'Barnes & Noble Member',
+    name: 'barnesnoble',
+    title: 'Barnes & Noble',
     link: 'http://search.barnesandnoble.com/booksearch/isbninquiry.asp?isbn=#{ISBN}',
-    affiliate_link: 'http://search.barnesandnoble.com/booksearch/isbninquiry.asp?isbn=#{ISBN}&afsrc=1&lkid=J27115602&pubid=K131337&byo=1',
+    affiliate_link: 'http://search.barnesandnoble.com/booksearch/isbninquiry.asp?isbn=#{ISBN}&cm_mmc=AFFILIATES-_-Linkshare-_-KgXurF9W7K4-_-10%3a1',
     query: 'http://search.barnesandnoble.com/booksearch/isbninquiry.asp?isbn=#{ISBN}',
     process: function(req) {
-      // <strong style="text-decoration: none;">$35.99</strong></span> Member price
-//<span class="memberPriceValue">$14.36</span>
-
-   try {
-	return req.responseText.match(/<span class=['"]+[^'"]*memberPriceValue[^'"]*['"]+>(\$[0-9.]*)<\/span>/)[1];
-        //return req.responseText.match(/<strong[^>]*>(\$[0-9.]*)<\/strong><\/span> Member price/)[1];
-      } catch (e) {}
+    try {
+        return req.responseText.match(/itemprop=['"]+price['"]+>\s+(\$[0-9.]*)\s+<\/div>/)[1];
+      } catch (e) {
+        return "";
+      }
+    }
+  },
+  {
+    name: 'barnesnoble_marketplace',
+    title: 'Barnes & Noble Market',
+    link: 'http://search.barnesandnoble.com/booksearch/isbninquiry.asp?isbn=#{ISBN}',
+    affiliate_link: 'http://search.barnesandnoble.com/booksearch/isbninquiry.asp?isbn=#{ISBN}&cm_mmc=AFFILIATES-_-Linkshare-_-KgXurF9W7K4-_-10%3a1',
+    query: 'http://search.barnesandnoble.com/booksearch/isbninquiry.asp?isbn=#{ISBN}',
+    process: function(req) {
+    try {
+	return req.responseText.match(/<span class=['"]+marketplace-col['"]+>\s+(\$[0-9.]*)\s+<\/span>/)[1];
+      } catch (e) {
+	return "";
+      }
     }
   },
   {
     name: 'buy',
     title: 'Buy',
-    link: "http://www.buy.com/retail/usersearchresults.asp?qu=#{ISBN}",
+    link: "http://www.buy.com/SR/SearchResults.aspx?sort=4&pv=1&qu=#{ISBN}",
+    affiliate_line: "http://affiliate.buy.com/deeplink?id=KgXurF9W7K4&mid=36342&murl=http%3A%2F%2Fwww%2Ebuy%2Ecom%2FSR%2FSearchResults%2Easpx%3Fsort%3D4%26pv%3D1%26qu%3D#{ISBN}", 
+    query: 'http://mobile.buy.com/ibuy/Search.aspx?pg=0&s=#{ISBN}',
     process: function(req) {
       if (!req.responseText.match('did not return an exact match.')) {
-        //<span class="adPrice" style="font-size:11px"><b>$11.20</b></span>
-        // <td style="padding-top:1px;line-height:15px;" align="center"><nobr><b>Our Low Price: </b><span class="adPrice"><b>$28.34</b></span>&nbsp; </nobr></td>
-        // <td align="center"><b>Low Price: </b><b class='adPrice'>$8.48</b></td></tr></table></div></td>
-
-        //See more matches<\/a></td></tr><tr><td colspan="2"><table border="0" cellpadding="0" cellspacing="0"><tr><td style="padding-bottom:2px"> <a href="/prod/that-old-cape-magic/q/loc/106/211143748.html" class="standardText" style="font-size:11px">Buy new</a>: <span style="font-size:11px; text-decoration: line-through">$25.95</span> <span class="adPrice" style="font-size:11px"><b>$16.14</b>
-        var price = req.responseText.match(/See more matches<\/a><\/td><\/tr><tr><td[^>]*><table[^>]*><tr><td[^>]*> <a[^>]*>Buy new<\/a>: (?:<span [^>]*line-through['"]+>\$[0-9.]*<\/span> )?<span[^>]*class=['"]+adPrice['"]+[^>]*>[<b>]*(\$[0-9.]*)<\/b>/);
+        var price = req.responseText.match(/class=['"]*ProductPrice['"]*>(?:<span\s*class=['"]*strike['"]*>[\$0-9.]+<\/span>)\s*(\$[0-9.]+)/);
         if (price) {
           return price[1];
         }
@@ -229,14 +229,15 @@ var stores = [
   {
     name: 'half',
     title: 'Half.com',
+//pending website verification
     link:  'http://search.half.ebay.com/ws/web/HalfSearch?m=books&isbn=#{ISBN}&submit=Search',
-    match: /Best[^P]*Price[^\$]*([^<]*)</
+    match: /Best[^P]*Price[^\$]*([^<)]*)</
   },
   {
     name: 'powells',
     title: 'Powells',
     link: "http://www.powells.com/biblio?isbn=#{ISBN}",
-    affiliate_link: "http://www.powells.com/cgi-bin/partner?partner_id=29743&cgi=product&isbn=#{ISBN}",
+    affiliate_link: "http://www.powells.com/partner/36386/biblio/#{ISBN}?p_isbn",
     query: 'http://www.powells.com/search/linksearch?isbn=#{ISBN}',
     process: function( req ) {
     var price = '';

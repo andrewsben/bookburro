@@ -100,7 +100,7 @@ var burro = burro || {};
     var href = win.location.href;
 
     if (href.match('amazon.com') && !href.match('rate-this')) {
-      return checkISBN(href.match(/\/(\d{9}[0-9Xx])(\/|\?|$)/)[1]);
+        return checkISBN(win.body.innerHTML.match(/ISBN\D*10\D*(\d{13}|\d{9}[0-9Xx])/)[1]);
     }
 
     if (href.match('booksamillion.com')) {
@@ -108,11 +108,12 @@ var burro = burro || {};
     }
 
     if (href.match('barnesandnoble.com')) {
-      if (href.toLowerCase().match(/isbn=/)) {
-        return checkISBN( href.toLowerCase().match(/isbn=(\d{13}|\d{9}[0-9x])(\&|\?|$)/)[1] );
-      }
       if (href.toLowerCase().match(/ean=/)) {
         return checkISBN( href.toLowerCase().match(/ean=(\d{13}|\d{9}[0-9x])(\&|\?|$)/)[1] );
+      }
+
+      if (href.toLowerCase().match(/\e\//)) {
+        return checkISBN( href.toLowerCase().match(/\/e\/(\d{13}|\d{9}[0-9x])(\&|\?|$)/)[1] );
       }
     }
 
@@ -141,6 +142,16 @@ var burro = burro || {};
         }
       }
     }
+
+    if (href.match('shelfari.com')) {
+      var dts = win.getElementsByTagName('div');
+      for (i=0; i<dts.length; i++) {
+        if (dts[i].innerHTML.match('ISBN')) {
+          return checkISBN(dts[i].innerHTML.match(/ISBN[\D*](\d{13}|\d{9}[0-9Xx])/)[1] );
+       } 
+      }
+    }
+
 
     if (href.match('alibris.com')) {
       var bs = win.getElementsByTagName('b');
