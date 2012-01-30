@@ -489,64 +489,11 @@ BBSVC.worldcat = function() {
   return new Worldcat();
 }
 
-var stores;
-
-function processStores(callback) {
-    var process_req;
-    var return_stores;
-    try { process_req = new XMLHttpRequest(); } 
-    catch(e) { return false; }
-    if (process_req)
-    {
-        process_req.open("GET", 'http://www.andrewsben.com/media/images/stores.js',false);
-        process_req.onreadystatechange = function() {
-	    if (process_req.readyState == 4) {
-	        if (process_req.status == 200) {
-		    callback(null, process_req.responseText);
-		} else { callback(process_req.statusText); }
-	    }
-	}
-   } 
-   process_req.send(null);
-}
-
-
-
-/*
-stores = processStores(function(err, response) {
-    if (!err) {
-	Components.utils.import("resource://gre/modules/NetUtil.jsm");
-	Components.utils.import("resource://gre/modules/FileUtils.jsm");
-	var data = response;
-	var file = FileUtils.getFile("ProfD", ["bookburro","stores.js"]);	
-	var ostream = FileUtils.openSafeFileOutputStream(file)
-	var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].
-		createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
-	converter.charset = "UTF-8";
-	var istream = converter.convertToInputStream(data);
-
-	// The last argument (the callback) is optional.
-	NetUtil.asyncCopy(istream, ostream, function(status) {
-		if (!Components.isSuccessCode(status)) {
-			// Handle error!
-			return;
-		}
-
-	// Data has been written to the file.
-	});
-	    
-	    
-	    
-	eval("(" + response + ")");
-    } 
-});
-*/
-
 /***********************
  * Store enumerator
  */
 
-stores = loadSubScript('chrome://bookburro/content/data/stores.js').stores;
+var stores = loadSubScript('chrome://bookburro/content/data/stores.js').stores;
 
 function active_stores(force) {
   var rval = [];
